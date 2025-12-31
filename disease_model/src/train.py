@@ -106,25 +106,47 @@ def split_class_directory(class_directory: Path):
 def main():
 
     """"
-     THIS IS THE MAIN FUNCTION THAT PERFORMS DATASET SPLTTING FOR ALL CLASSES
+     This is he main funcion in his class in charge of perfoming dataset splitting for
+     all class folders in which are conained within the raw dataset directory 
+
     """
+
+    #These print statememts are purely for debug purposes 
+    #crucial for dealiing with path issues
     print("RAW_DATA_DIR =", RAW_DATA_DIR.resolve())
     print("PROCESSED_DATA_DIR =", PROCESSED_DATA_DIR.resolve())
-
+    
+    #if statement makes sure that the raw dataset directory exists
     if not RAW_DATA_DIR.exists():
         print(" RAW_DATA_DIR does not exist. Check your folder path.")
         return
+  
 
+    #in charge of clearly identifying class directories
+    #within the raw dataset
     class_folders = [directory for directory in RAW_DATA_DIR.iterdir() if directory.is_dir()]
     print(f"Found {len(class_folders)} class folders in raw/")
 
-    random.seed(42)
-    recreation_directory(PROCESSED_DATA_DIR)
 
+    # this random seed is used for reproducibility
+    random.seed(42)
+
+
+
+    #in charge of resetting the processed dataset directory 
+    recreation_directory(PROCESSED_DATA_DIR)
+    
+    #splits each class directoy independently
     for class_directory in class_folders:
         split_class_directory(class_directory)
 
     print("\n Done. Output created at:", PROCESSED_DATA_DIR)
+
+
+
+
+
+    ##entry point for script 
 
 if __name__ == "__main__":
     main()

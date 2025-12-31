@@ -6,38 +6,89 @@ from pathlib import Path
 from sklearn.metrics import classification_report, confusion_matrix
 from collections import Counter
 
+
+#---
+#below are my pah configurations respective to my folder on my computer
+#---
+
+#this has the path to he processed raw plant village dataset in which
+#it contains many the folders rgarding training/testing/validation folders
 DATA_DIR = Path("backend/disease_model/data/processed")
+
+##holds the output for the path that holds the trained classification model
 MODEL_OUT = Path("backend/disease_model/models/disease_model.keras")
 
-IMG_SIZE = (224, 224)
-BATCH_SIZE = 32
-EPOCHS = 5  # start with 5 for speed; you can raise to 8-10 later
 
-def make_datasets():
+
+
+
+##-----
+#   THE TRAINING HYPERPARAMATERS
+##-----
+
+
+#THis is the initial number of epochs that will be used in the first run through of training
+#this will be increased laterto 8 for fine tuning purposes to imporve the accuracy
+
+EPOCHS = 5  # start with 5 for speed purposes
+
+
+
+#this is the target image size that will be expected by MobileNetv2
+IMAGE_SIZE = (224, 224)
+
+
+
+#has the number of images that will be processed  by each batch
+BATCH_SIZE = 32
+
+
+##THIS FUNCTION WILL LOAD THE TRAINING,TEST AND VALIDATION FROM DISK
+
+#FURTHERMORE THE DATASET WILL BE LOADED USING DIRECTORY STRUCTURE,
+#AND EACH FOLDER NAME WILL REPRESENT ITS OWN CLASS LABEL
+def MADE_DATSET():
+
+
+    #in charge of loading the dataset 
     train_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR / "train",
-        image_size=IMG_SIZE,
+        image_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         label_mode="int",
         shuffle=True,
         seed=42,
     )
+
+    #in charge of loading the validation dataset 
     val_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR / "val",
-        image_size=IMG_SIZE,
+       
+        image_size=IMAGE_SIZE,
+
         batch_size=BATCH_SIZE,
+
         label_mode="int",
+
         shuffle=True,
         seed=42,
     )
+
+
+    #in charge of loading the test dataset and there will be no shuffling 
+    #as the label order needs to be preserved 
     test_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR / "test",
-        image_size=IMG_SIZE,
+
+        image_size=IMAGE_SIZE,
+
         batch_size=BATCH_SIZE,
+
         label_mode="int",
         shuffle=False,
     )
-
+    
+    #his is the class that will be directly inferred from the folder names
     class_names = train_ds.class_names
 
     AUTOTUNE = tf.data.AUTOTUNE
@@ -48,10 +99,13 @@ def make_datasets():
 
     return train_ds, val_ds, test_ds, class_names
 
-def build_model(num_classes: int):
+#-
+
+def MODEL_BUILT(num_classes: int):
+
     # Base CNN (pretrained on ImageNet)
     base_model = tf.keras.applications.MobileNetV2(
-        input_shape=IMG_SIZE + (3,),
+        input_shape=IMAGE_SIZE + (3,),
         include_top=False,
         weights="imagenet",
     )
@@ -64,7 +118,7 @@ def build_model(num_classes: int):
         tf.keras.layers.RandomZoom(0.10),
     ])
 
-    inputs = tf.keras.Input(shape=IMG_SIZE + (3,))
+    inputs = tf.keras.Input(shape=IMAGE_SIZE + (3,))
     x = augment(inputs)
     x = tf.keras.applications.mobilenet_v2.preprocess_input(x)
     x = base_model(x, training=False)
@@ -103,7 +157,7 @@ def main():
         print(" Can't find processed/train. Run train.py first.")
         return
 
-    train_ds, val_ds, test_ds, class_names = make_datasets()
+    train_ds, val_ds, test_ds, class_names = MADE_DATSET()
     print(f" Classes ({len(class_names)}): {class_names}")
 
     # --------------------------------------------------
@@ -116,7 +170,7 @@ def main():
 
     print("Saved class names to models/class_names.json")
 
-    model, base_model = build_model(num_classes=len(class_names))
+    model, base_model = MODEL_BUILT(num_classes=len(class_names))
     model.summary()
     
     # Build class weights from the training dataset to reduce class imbalance
@@ -153,8 +207,12 @@ def main():
 
     model.fit(
         train_ds,
+
+
         validation_data=val_ds,
+
         epochs=3,
+
         class_weight=class_weight,
     )
 
