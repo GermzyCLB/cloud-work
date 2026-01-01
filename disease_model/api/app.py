@@ -22,53 +22,54 @@ def main():
 
     print("infer_one.py started")
 
-    storage_client = storage.Client()
-    bucket = storage_client.bucket("plant-data-bucket-140")
+
 
     # import keras disease model
 
-    #blob = bucket.blob("disease_model.keras")
+    """
+    blob = bucket.blob("disease_model.keras")
     
-    MODEL_PATH = "gs://plant-data-bucket-140/disease_model.kera"
     
-    #blob.download_to_filename(MODEL_PATH)
-
+    
+    blob.download_to_filename(MODEL_PATH)
+    """
+    bucket_mount_path = os.environ.get('MOUNT_PATH', '/mnt/storage')
     IMG_SIZE = (224, 224)
 
 
-    """
+    # import keras disease model
+
+    MODEL_PATH = os.path.join(bucket_mount_path, "disease_model.keras")
+
+    
+    
     # import disease class names json
 
-    blob = bucket.blob("class_names.json")
+
+    print("reading json file")
     
-    CLASS_NAMES_PATH = "/tmp/class_names.json"
-    
-    blob.download_to_filename(CLASS_NAMES_PATH)
+    CLASS_NAMES_PATH = os.path.join(bucket_mount_path, "class_names.json")
 
     with open(CLASS_NAMES_PATH, 'r') as f:
         class_names = json.load(f)
 
-
+    
 
     # import test image
-
-    blob = bucket.blob("tomato_septoria_test.jpg")
     
-    img_path = "/tmp/tomato_septoria_test.jpg"
+    img_path = os.path.join(bucket_mount_path, "tomato_septoria_test.jpg")
     
-    blob.download_to_filename(img_path)
 
-
-
-    """
+    # load model
+    
     print("Loading model...")
     model = tf.keras.models.load_model(MODEL_PATH)
 
     print("model loaded successfully")
     
-    return 'success'
 
-    """
+
+
     x = preprocess_image(img_path)
     probs = model.predict(x, verbose=0)[0]
 
@@ -102,8 +103,7 @@ def main():
         print(f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}")
         top3_text += f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}\n"
 
-    return top3_text  
-    """  
+    return top3_text   
 
 
 @functions_framework.http
@@ -121,6 +121,8 @@ def hello_http(request):
     request_args = request.args
 
     text = main()
+
+    
 
 
 
