@@ -9,8 +9,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okio.IOException
 
 class MainActivity : AppCompatActivity(), View.OnClickListener{
+
 
     lateinit var btnInfer : Button
 
@@ -19,6 +26,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
     lateinit var etA : EditText
 
     lateinit var resultTv : TextView
+
+    fun sendToCloud() {
+        val client = OkHttpClient()
+        val url = "https://infer-plant-918497152370.europe-west1.run.app"
+        val request = Request.Builder().url(url).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if(response.isSuccessful){
+                    runOnUiThread {
+                        resultTv.text = response.body!!.string()
+                    }
+                }
+            }
+
+        })
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,9 +73,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
         when(v?.id){
             R.id.btn_infer ->{
                 result = a
+                sendToCloud()
             }
         }
-
-        resultTv.text = "Result is $result"
     }
 }
