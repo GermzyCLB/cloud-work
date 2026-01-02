@@ -11,10 +11,18 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.Response
 import okio.IOException
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class MainActivity : AppCompatActivity(), View.OnClickListener{
 
@@ -27,10 +35,38 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
 
     lateinit var resultTv : TextView
 
+    fun convertInputStreamToFile(inputStream: InputStream): File? {
+        return try {
+            val tempFile = File.createTempFile("img", ".jpg")
+            tempFile.deleteOnExit()
+
+            FileOutputStream(tempFile).use { outputStream ->
+                inputStream.use { input ->
+                    input.copyTo(outputStream)
+                }
+            }
+
+            tempFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
+
     fun sendToCloud() {
         val client = OkHttpClient()
         val url = "https://infer-plant-918497152370.europe-west1.run.app"
-        val request = Request.Builder().url(url).build()
+
+        val ims = getAssets().open("potato.jpg")
+        val file = convertInputStreamToFile(ims)
+
+        val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("image", file!!.name,
+            file!!.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        ).build()
+
+        val request = Request.Builder().url(url).post(requestBody).build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
