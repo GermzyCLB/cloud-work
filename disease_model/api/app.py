@@ -6,6 +6,11 @@ import sys
 import json
 import numpy as np
 import tensorflow as tf
+import keras
+from tensorflow.python.lib.io import file_io
+from tensorflow.keras.models import load_model
+import tempfile
+
 
 def preprocess_image(img_path):
     """
@@ -13,12 +18,26 @@ def preprocess_image(img_path):
     NOTE: Do NOT call preprocess_input here because the saved model
     already contains MobileNetV2 preprocessing inside it.
     """
+    IMG_SIZE = (224, 224)
     img = tf.keras.utils.load_img(img_path, target_size=IMG_SIZE)
     arr = tf.keras.utils.img_to_array(img).astype("float32")  # keep 0..255
     arr = np.expand_dims(arr, axis=0)  # (1, H, W, C)
     return arr
 
-def main():
+
+@functions_framework.http
+def hello_http(request):
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
+    """
+    request_json = request.get_json(silent=True)
+    request_args = request.args
 
     print("infer_one.py started")
 
@@ -39,7 +58,19 @@ def main():
 
     # import keras disease model
 
-    MODEL_PATH = os.path.join(bucket_mount_path, "disease_model.keras")
+    '''
+    model_file = file_io.FileIO('gs://plant-data-bucket/disease_model.keras', mode='rb')
+
+
+
+    temp_model_location = './disease_model.keras'
+    temp_model_file = open(temp_model_location, 'wb')
+    temp_model_file.write(model_file.read())
+    temp_model_file.close()
+    model_file.close()
+    '''
+
+    #MODEL_PATH = os.path.join(bucket_mount_path, "model.weights.h5")
 
     
     
@@ -61,9 +92,17 @@ def main():
     
 
     # load model
+
+    local_model_path = os.path.join(tempfile.gettempdir(), "disease_model.keras") # download the model only once to /tmp directory
+    if not os.path.exists(local_model_path):
+        print("Downloading model...")
+        tf.io.gfile.copy("gs://plant-data-bucket-140/disease_model.keras", local_model_path, overwrite=True)
     
     print("Loading model...")
-    model = tf.keras.models.load_model(MODEL_PATH)
+    model = load_model(local_model_path)
+    
+    #print("Loading model...")
+    #model = tf.keras.models.load_model("gs://plant-data-bucket-140/disease_model.keras")
 
     print("model loaded successfully")
     
@@ -103,24 +142,8 @@ def main():
         print(f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}")
         top3_text += f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}\n"
 
-    return top3_text   
+    text = top3_text   
 
-
-@functions_framework.http
-def hello_http(request):
-    """HTTP Cloud Function.
-    Args:
-        request (flask.Request): The request object.
-        <https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data>
-    Returns:
-        The response text, or any set of values that can be turned into a
-        Response object using `make_response`
-        <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
-    """
-    request_json = request.get_json(silent=True)
-    request_args = request.args
-
-    text = main()
 
     
 
