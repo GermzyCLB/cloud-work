@@ -29,9 +29,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
 
     lateinit var btnInfer : Button
 
-    lateinit var editText: EditText
 
-    lateinit var etA : EditText
+    lateinit var page_heading : TextView
 
     lateinit var resultTv : TextView
 
@@ -96,19 +95,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
         }
 
         btnInfer = findViewById(R.id.btn_infer)
-        etA = findViewById(R.id.et_a)
+        page_heading = findViewById(R.id.et_a)
         resultTv = findViewById(R.id.result_tv)
 
         btnInfer.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
-        var a = etA.text.toString()
-        var result = ""
 
         when(v?.id){
             R.id.btn_infer ->{
-                result = a
+                resultTv.text = "awaiting response ..."
                 sendToCloud()
             }
         }
