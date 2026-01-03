@@ -107,7 +107,7 @@ def main():
 
     """"
      This is he main funcion in his class in charge of perfoming dataset splitting for
-     all class folders in which are conained within the raw dataset directory 
+     all class folders in which are contained within the raw dataset directory 
 
     """
 
