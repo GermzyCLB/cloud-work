@@ -6,14 +6,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center_horizontal"
     tools:context=".MainActivity">
 
-    <EditText
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Scan Plant"
         android:id="@+id/et_a"
         android:layout_margin="20dp"
-        android:hint="Enter a"/>
+        android:textSize="20dp"
+        android:textAlignment="center"/>
 
     <Button
         android:id="@+id/btn_infer"
@@ -22,14 +25,19 @@
         android:layout_margin="4dp"
         android:text="infer" />
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <TextView
+        android:id="@+id/result_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Result"
-        android:id="@+id/result_tv"
-        android:textSize="24sp"
         android:layout_margin="20dp"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:text=""
+        android:textSize="24sp" />
 
 
 </LinearLayout>
