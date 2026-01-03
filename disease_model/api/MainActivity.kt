@@ -1,9 +1,12 @@
 package com.example.myapplication
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +37,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
 
     lateinit var resultTv : TextView
 
+    lateinit var imageView : ImageView
+
+    lateinit var pathToImage : String
+
+
     fun convertInputStreamToFile(inputStream: InputStream): File? {
         return try {
             val tempFile = File.createTempFile("img", ".jpg")
@@ -58,8 +66,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
         val client = OkHttpClient()
         val url = "https://infer-plant-918497152370.europe-west1.run.app"
 
-        val ims = getAssets().open("potato.jpg")
+
+        // covert to type File, to send to API
+        val ims = getAssets().open(pathToImage)
+
         val file = convertInputStreamToFile(ims)
+
+
 
         val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("image", file!!.name,
             file!!.asRequestBody("image/jpeg".toMediaTypeOrNull())
@@ -97,6 +110,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
         btnInfer = findViewById(R.id.btn_infer)
         page_heading = findViewById(R.id.et_a)
         resultTv = findViewById(R.id.result_tv)
+        imageView = findViewById(R.id.imageView)
+
+        pathToImage = "potato.jpg"
 
         btnInfer.setOnClickListener(this)
     }
@@ -105,6 +121,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
 
         when(v?.id){
             R.id.btn_infer ->{
+                // convert to bitmap to display in app
+                val ims2 = getAssets().open(pathToImage)
+
+                val bitmap = BitmapFactory.decodeStream(ims2)
+
+                imageView.setImageBitmap(bitmap)
+
                 resultTv.text = "awaiting response ..."
                 sendToCloud()
             }
