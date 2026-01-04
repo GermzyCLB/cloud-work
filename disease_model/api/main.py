@@ -41,39 +41,11 @@ def hello_http(request):
 
     print("infer_one.py started")
 
+    # set base path to copy files from gcs bucket into
 
-
-    # import keras disease model
-
-    """
-    blob = bucket.blob("disease_model.keras")
-    
-    
-    
-    blob.download_to_filename(MODEL_PATH)
-    """
     bucket_mount_path = os.environ.get('MOUNT_PATH', '/mnt/storage')
     IMG_SIZE = (224, 224)
 
-
-    # import keras disease model
-
-    '''
-    model_file = file_io.FileIO('gs://plant-data-bucket/disease_model.keras', mode='rb')
-
-
-
-    temp_model_location = './disease_model.keras'
-    temp_model_file = open(temp_model_location, 'wb')
-    temp_model_file.write(model_file.read())
-    temp_model_file.close()
-    model_file.close()
-    '''
-
-    #MODEL_PATH = os.path.join(bucket_mount_path, "model.weights.h5")
-
-    
-    
     # import disease class names json
 
 
@@ -85,13 +57,21 @@ def hello_http(request):
         class_names = json.load(f)
 
     
+    # load image from request
+    image_file = request.files['image']
 
-    # import test image
-    
-    img_path = os.path.join(bucket_mount_path, "tomato_septoria_test.jpg")
+    if image_file.filename == '':
+        return "error: no image selected"
+
+    # make a copy of image in ram
+    img_path = os.path.join('/tmp/', image_file.filename)
+
+    print(image_file.filename)
+
+    image_file.save(img_path)    
     
 
-    # load model
+    # load model from gcs bucket
 
     local_model_path = os.path.join(tempfile.gettempdir(), "disease_model.keras") # download the model only once to /tmp directory
     if not os.path.exists(local_model_path):
@@ -101,15 +81,16 @@ def hello_http(request):
     print("Loading model...")
     model = load_model(local_model_path)
     
-    #print("Loading model...")
-    #model = tf.keras.models.load_model("gs://plant-data-bucket-140/disease_model.keras")
 
     print("model loaded successfully")
     
 
 
+    # process image into format accepted by model
 
     x = preprocess_image(img_path)
+
+    # predict plant and disease
     probs = model.predict(x, verbose=0)[0]
 
     pred_idx = int(np.argmax(probs))
@@ -133,26 +114,29 @@ def hello_http(request):
     print("Prediction:", pred_class)
     print("Confidence:", f"{confidence:.4f}")
 
-    # Optional: show top 3 predictions (nice for report screenshots)
-    top3 = np.argsort(probs)[::-1][:3]
-    top3_text = "top 3: "
-    
-    print("\nTop 3:")
-    for i in top3:
-        print(f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}")
-        top3_text += f"  {class_names[int(i)]}: {float(probs[int(i)]):.4f}\n"
+    # retrieve recommended treatment from json file
+    TREATMENT_PATH = os.path.join(bucket_mount_path, "treatment.json")
 
-    text = top3_text   
+    with open(TREATMENT_PATH, 'r') as f:
+        data = json.load(f)
 
+    confidence = f"{confidence:.4f}"
 
-    
+    confidence = float(confidence) * 100
 
+    confidence = str(confidence) + "%"
 
+    pred_class_formatted = pred_class.replace("_", " ").capitalize()
 
-    if request_json and 'name' in request_json:
-        name = request_json['name']
-    elif request_args and 'name' in request_args:
-        name = request_args['name']
-    else:
-        name = 'World' + text
-    return 'Hello {}!'.format(name)
+    pred_class_split = pred_class_formatted.split()
+
+    plant = pred_class_split[0]
+
+    condition = " ".join(pred_class_split[1:])
+
+    treatment = data.get(pred_class, "Treatment not found")
+
+    text = "Plant: " + plant + "\nCondition: " + condition + "\nConfidence: " + confidence + "\n\nTreatment: " + treatment    
+
+    # return findings to app
+    return text
