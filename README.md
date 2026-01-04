@@ -1,5 +1,12 @@
 # Plant Disease Detector
 
+## Demo Video
+https://cityuni-my.sharepoint.com/:v:/g/personal/andrew_roman_city_ac_uk/IQAT-RT2SWTnTb2mkFaY1UGAAeQf7TSCpZktbGkiGQLODtY?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=7JBB1W
+
+## Couldn't fit into demo video time span
+
+A cloud solution is needed in this project as it allows the ML model to be processed in the cloud. Phones and tablets may not have the necessary requirements to store and run a model.
+
 https://github.com/GermzyCLB/cloud-work
 
 ## Structure
