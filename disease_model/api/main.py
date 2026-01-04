@@ -11,7 +11,9 @@ from tensorflow.python.lib.io import file_io
 from tensorflow.keras.models import load_model
 import tempfile
 
-
+""" 
+Convert file into format accepted by classifying model
+"""
 def preprocess_image(img_path):
     """
     Load an image and format it as a batch tensor for the model.
@@ -25,6 +27,9 @@ def preprocess_image(img_path):
     return arr
 
 
+"""
+Receive the request and seperate out contents
+"""
 @functions_framework.http
 def hello_http(request):
     """HTTP Cloud Function.
@@ -47,7 +52,6 @@ def hello_http(request):
     IMG_SIZE = (224, 224)
 
     # import disease class names json
-
 
     print("reading json file")
     
@@ -120,11 +124,16 @@ def hello_http(request):
     with open(TREATMENT_PATH, 'r') as f:
         data = json.load(f)
 
+    # format confidence into a percentage    
+
     confidence = f"{confidence:.4f}"
 
     confidence = float(confidence) * 100
 
     confidence = str(confidence) + "%"
+
+
+    # seperate plant name and disease type
 
     pred_class_formatted = pred_class.replace("_", " ").capitalize()
 
@@ -133,6 +142,8 @@ def hello_http(request):
     plant = pred_class_split[0]
 
     condition = " ".join(pred_class_split[1:])
+
+    # retrieve treatment from JSON file
 
     treatment = data.get(pred_class, "Treatment not found")
 
